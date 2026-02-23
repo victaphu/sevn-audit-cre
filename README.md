@@ -7,7 +7,11 @@ A Chainlink CRE workflow that performs **three-way reconciliation** across Sevn 
 
 ## Problem
 
-Every business that accepts payments through a third-party processor (Stripe, PayPal, etc.) must reconcile two independent ledgers: their internal records vs. what the processor actually collected. Today this is done manually or via self-hosted automation — but the results are **self-attested**. There's no independent verification, no tamper-proof record, and no continuous assurance.
+Financial reporting today is **periodic and stale**. Public companies report quarterly, and those results are often published weeks after the period ends. Investors, lenders, and analysts make capital allocation decisions — worth billions — based on backward-looking snapshots that can be months old. Even quarterly reporting doesn't give capital markets an accurate pulse of how well a company is performing right now.
+
+At the operational level, every business that accepts payments through a third-party processor (Stripe, PayPal, etc.) must reconcile two independent ledgers: their internal records vs. what the processor actually collected. Today this is done manually or via self-hosted automation — but the results are **self-attested**. There's no independent verification, no tamper-proof record, and no way for external parties to trust the numbers between reporting cycles.
+
+The result: **information asymmetry**. Insiders have real-time data; external stakeholders — investors, regulators, creditors — are flying blind between periodic disclosures.
 
 ## Solution
 
@@ -225,11 +229,12 @@ The video demonstrates:
 
 ## Real-World Impact
 
-This replaces trust-based, point-in-time financial auditing with continuous, independently-verified three-way reconciliation:
+This replaces trust-based, point-in-time financial auditing with **continuous, independently-verified assurance** — giving capital markets access to up-to-the-minute financial data instead of stale quarterly snapshots:
 
-- **For regulators**: Daily tamper-proof attestations instead of annual audits
-- **For auditors**: Cryptographic proof reduces re-performance work
-- **For businesses**: Automated compliance that runs while you sleep
+- **For investors & capital markets**: Near real-time verified financial data for more accurate valuation, better price discovery, and more informed capital allocation decisions — instead of waiting months for outdated quarterly reports
+- **For regulators**: Daily tamper-proof attestations instead of annual audits, enabling earlier detection of discrepancies
+- **For auditors**: Cryptographic proof reduces re-performance work; continuous data trail replaces point-in-time sampling
+- **For businesses**: Automated compliance that runs while you sleep, and the ability to signal financial health to markets continuously
 - **For users**: Transparent proof that their payments match the platform's records
 
 ## License
