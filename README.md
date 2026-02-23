@@ -3,6 +3,10 @@
 > **Chainlink Convergence Hackathon 2026**
 > Tracks: Risk & Compliance | CRE & AI | World ID + CRE
 
+<p align="center">
+  <img src="diagrams/problem-statement.png" alt="Today's periodic reporting vs continuous assurance with Sevn CRE" width="100%" />
+</p>
+
 A Chainlink CRE workflow that performs **three-way reconciliation** across Sevn (internal ledger), Stripe (payment processor), and Polygon (ERC-1155 on-chain token supply), uses Google Gemini AI to classify risk, and publishes tamper-proof attestations on Ethereum — gated by World ID so only verified humans can trigger audits.
 
 ## Problem
@@ -28,36 +32,21 @@ We move the reconciliation engine onto Chainlink's decentralized oracle network.
 
 ## Architecture
 
-```mermaid
-flowchart TB
-  classDef user fill:#ffffff,stroke:#0b1f3a,stroke-width:1.5,color:#0b1f3a;
-  classDef onchain fill:#eef5ff,stroke:#2f6bff,stroke-width:1.5,color:#0b1f3a;
-  classDef offchain fill:#f7f9fc,stroke:#7c8aa6,stroke-width:1.2,color:#0b1f3a;
-  classDef data fill:#ffffff,stroke:#9aa9c2,stroke-width:1.2,color:#0b1f3a;
-  classDef highlight fill:#e8f7ff,stroke:#1f80ff,stroke-width:1.6,color:#0b1f3a;
+### Current State — Hackathon Build
 
-  U[Frontend<br/>React + World ID]:::user
-  G[AuditGate.sol<br/>Sepolia]:::onchain
-  L[LogTrigger<br/>AuditRequested event]:::onchain
-  C[Cron Trigger<br/>2:00 AM AEST]:::onchain
+The workflow is fully functional via CRE simulation with on-chain broadcast. The React frontend connects to AuditGate.sol (World ID verification), and the CRE workflow is triggered manually via `cre simulate --broadcast`. All 7 steps execute end-to-end: confidential HTTP fetches, multi-chain EVM reads, three-way reconciliation, Gemini AI risk scoring, and attestation publishing to Sepolia.
 
-  subgraph DON[Chainlink CRE Workflow<br/>DON-executed]
-    direction TB
-    S1[HTTP: Sevn API]:::data
-    S2[HTTP: Stripe]:::data
-    S3[EVM Read: Prev Attestation]:::data
-    S4[EVM Read: Polygon ERC-1155]:::data
-    S5[Compute: 3-Way Match]:::offchain
-    S6[HTTP: Gemini AI Risk]:::data
-    S7[EVM Write: Publish Attestation]:::offchain
-  end
+<p align="center">
+  <img src="diagrams/audit-workflow-current.png" alt="Current state — CRE workflow with manual simulate trigger" width="100%" />
+</p>
 
-  A[AuditAttestation.sol<br/>Sepolia]:::highlight
+### Future State — Production Deployment
 
-  U --> G --> L --> DON
-  C --> DON
-  DON --> A
-```
+In production, manual simulation is replaced by native CRE triggers. An **EVM Log Trigger** watches for `AuditRequested` events from AuditGate.sol and auto-executes the workflow. A **Chainlink Automation Job Scheduler** runs the cron-based daily audit. HTTP steps upgrade to **Confidential Compute** for full TEE isolation. The workflow becomes fully autonomous — no human in the loop after the initial World ID–verified request.
+
+<p align="center">
+  <img src="diagrams/audit-workflow-future.png" alt="Future state — fully autonomous CRE with Log Trigger and Automation" width="100%" />
+</p>
 
 ## Chainlink CRE Usage
 
