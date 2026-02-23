@@ -1,0 +1,12 @@
+{
+  "schedule": "0 0 16 * * *",
+  "sevnTruthUrl": "backend-truth-url",
+  "stripeTruthUrl": "stripe-truth-url",
+  "geminiApiUrl": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
+  "attestationContract": "your-attestation-contract",
+  "chainSelectorName": "ethereum-testnet-sepolia",
+  "polygonChainSelectorName": "polygon-mainnet",
+  "tokenContractAddress": "your-erc1155-token-address",
+  "sevnWalletAddress": "your-wallet-address",
+  "tokenIds": ["your-token-id"]
+}

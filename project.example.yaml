@@ -1,0 +1,12 @@
+# ==========================================================================
+# CRE PROJECT SETTINGS FILE
+# ==========================================================================
+# Sevn Assurance CRE — Convergence Hackathon 2026
+
+# ==========================================================================
+staging-settings:
+  rpcs:
+    - chain-name: ethereum-testnet-sepolia
+      url: https://sepolia.infura.io/v3/<infura id>
+    - chain-name: polygon-mainnet
+      url: https://polygon-bor-rpc.publicnode.com

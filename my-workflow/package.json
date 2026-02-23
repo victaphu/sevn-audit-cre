@@ -1,0 +1,21 @@
+{
+  "name": "sevn-audit-cre-workflow",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "bun x cre-compile src/main.ts dist/workflow.wasm",
+    "setup": "bun x cre-setup",
+    "simulate": "cre workflow simulate ../my-workflow -R ..",
+    "simulate:broadcast": "cre workflow simulate ../my-workflow -R .. --broadcast"
+  },
+  "dependencies": {
+    "@chainlink/cre-sdk": "latest",
+    "viem": "^2.34.0",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0",
+    "@types/node": "^22.0.0"
+  }
+}

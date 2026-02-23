@@ -1,0 +1,12 @@
+{
+  "name": "sevn-audit-cre",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "trigger": "bun run trigger-simulator.ts"
+  },
+  "dependencies": {
+    "ethers": "^6.13.4",
+    "dotenv": "^16.4.5"
+  }
+}

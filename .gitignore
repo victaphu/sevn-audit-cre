@@ -1,0 +1,33 @@
+node_modules/
+.env
+.env.local
+.env.*.local
+
+# Secrets
+secrets.json
+config.json
+project.yaml
+my-workflow/secrets.json
+
+# Build artifacts
+dist/
+out/
+*.wasm
+cache/
+artifacts/
+.cre_build_tmp.js
+
+# Foundry
+contracts/cache/
+contracts/out/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+
+# OS
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
