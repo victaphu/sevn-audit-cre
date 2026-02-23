@@ -73,7 +73,6 @@ In production, manual simulation is replaced by native CRE triggers. An **EVM Lo
 | [`my-workflow/config.json`](my-workflow/config.json) | Workflow config — chain selectors, contract addresses, cron schedule |
 | [`my-workflow/workflow.yaml`](my-workflow/workflow.yaml) | CRE workflow settings — artifact paths, workflow name |
 | [`project.yaml`](project.yaml) | CRE project config — RPC endpoints for Sepolia and Polygon |
-| [`trigger-simulator.ts`](trigger-simulator.ts) | Local LogTrigger simulator — listens for `AuditRequested` events and executes `cre workflow simulate` |
 
 ### Why CRE (not Functions)?
 
@@ -85,15 +84,27 @@ In production, manual simulation is replaced by native CRE triggers. An **EVM Lo
 
 ## Smart Contracts
 
-### AuditAttestation.sol
-Consumer contract that stores three-way reconciliation attestations. Each attestation is keyed by period date (YYYYMMDD) and includes revenue figures, revenue match rate, on-chain token supply/transfers, token match rate, AI risk classification, and cryptographic hashes.
+Both contracts are deployed on **Ethereum Sepolia** and verified on Etherscan.
 
-### AuditGate.sol
-World ID–gated trigger contract. Uses the World ID Router to verify ZK proofs from the IDKit widget. Nullifier tracking prevents Sybil attacks — each human can only request one audit per action.
+### AuditAttestation.sol — [`0xCbE7BFBa7B3E4B0d1494E684B532c68d72e25895`](https://sepolia.etherscan.io/address/0xCbE7BFBa7B3E4B0d1494E684B532c68d72e25895)
 
-**Attestation Chain**: Ethereum Sepolia
-**Token Chain**: Polygon Mainnet (ERC-1155)
-**World ID Router**: `0x469449f251692E0779667583026b5A1E99512157`
+CRE consumer contract that receives and stores three-way reconciliation attestations from the DON. Implements the `IReceiver` interface so the CRE KeystoneForwarder can deliver reports after multi-node consensus. Each attestation is keyed by period date (YYYYMMDD) and includes:
+
+- Sevn and Stripe revenue figures with revenue match rate (basis points)
+- On-chain token supply and transfers with token match rate (basis points)
+- AI risk classification (LOW / MEDIUM / HIGH) and Gemini-generated summary
+- Cryptographic hashes (Sevn data hash, Stripe data hash, reconciliation hash) for tamper detection
+- Chargeback totals, Stripe fees, giveaway costs, and wallet liability
+
+The contract stores only a `reportHash` and `timestamp` on-chain for gas efficiency, while emitting a `ReportPublished` event with the full ABI-encoded payload for client-side decoding.
+
+### AuditGate.sol — [`0xCA3Cc3C32F42E82a69A128147995d335FEdE9EeF`](https://sepolia.etherscan.io/address/0xCA3Cc3C32F42E82a69A128147995d335FEdE9EeF)
+
+World ID–gated trigger contract that controls who can request audits. Uses the World ID Router (`0x469449f251692E0779667583026b5A1E99512157`) to verify zero-knowledge proofs from the IDKit widget. Nullifier tracking prevents Sybil attacks — each verified human can only trigger one audit per action.
+
+When a valid proof is submitted, the contract emits an `AuditRequested(address requester, uint256 timestamp, uint256 nullifierHash)` event. In production, a CRE LogTrigger watches for this event to auto-execute the reconciliation workflow. Includes a `requestAuditDev()` function for hackathon staging without ZK verification.
+
+**Attestation Chain**: Ethereum Sepolia | **Token Chain**: Polygon Mainnet (ERC-1155)
 
 ## Project Structure
 
@@ -147,9 +158,84 @@ cd frontend && bun install && cd ..
 
 ### Configure
 
+Five config files need to be created from their `.example` templates. The actual files are gitignored — only the examples are checked in.
+
 ```bash
 cp .env.example .env
-# Fill in: private key, RPC URL, Gemini API key, contract addresses
+cp project.example.yaml project.yaml
+cp my-workflow/config.example.json my-workflow/config.json
+cp my-workflow/secrets.example.json my-workflow/secrets.json
+cp frontend/.env.example frontend/.env
+```
+
+#### 1. `.env` — Root environment (contract deployment & trigger simulator)
+
+| Variable | Description |
+|---|---|
+| `CRE_ETH_PRIVATE_KEY` | Sepolia private key for contract deployment and tx signing |
+| `CRE_RPC_URL_SEPOLIA` | Sepolia RPC endpoint (Alchemy, Infura, etc.) |
+| `CRE_TARGET` | CRE settings target — use `staging-settings` |
+| `CRE_CONFIG_HOME` | CRE config directory — use `.cre` |
+| `AUDIT_ATTESTATION_ADDRESS` | Deployed AuditAttestation.sol address (fill after deployment) |
+| `AUDIT_GATE_ADDRESS` | Deployed AuditGate.sol address (fill after deployment) |
+| `SEVN_RECONCILE_URL` | Base URL for Sevn reconciliation API |
+| `GEMINI_API_KEY` | Google Gemini API key for AI risk classification |
+| `NEXT_PUBLIC_WORLD_APP_ID` | World ID app ID from the Developer Portal |
+| `NEXT_PUBLIC_WORLD_ACTION` | World ID action string (e.g. `request-audit`) |
+
+#### 2. `project.yaml` — CRE project settings (RPC endpoints)
+
+Defines which RPC endpoints the CRE CLI uses for each chain during simulation.
+
+```yaml
+staging-settings:
+  rpcs:
+    - chain-name: ethereum-testnet-sepolia
+      url: https://sepolia.infura.io/v3/<your-infura-id>
+    - chain-name: polygon-mainnet
+      url: https://polygon-bor-rpc.publicnode.com
+```
+
+#### 3. `my-workflow/config.json` — Workflow runtime config
+
+Passed to the CRE workflow at execution time. Contains API URLs, contract addresses, chain selectors, and token IDs.
+
+```json
+{
+  "schedule": "0 0 16 * * *",
+  "sevnTruthUrl": "https://your-backend/api/cre/btx-truth",
+  "stripeTruthUrl": "https://your-backend/api/cre/stripe-truth",
+  "geminiApiUrl": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
+  "attestationContract": "0x...deployed AuditAttestation address",
+  "chainSelectorName": "ethereum-testnet-sepolia",
+  "polygonChainSelectorName": "polygon-mainnet",
+  "tokenContractAddress": "0x...your ERC-1155 contract on Polygon",
+  "sevnWalletAddress": "0x...Sevn company wallet on Polygon",
+  "tokenIds": ["6"]
+}
+```
+
+#### 4. `my-workflow/secrets.json` — CRE workflow secrets
+
+Injected into the DON via the Vault. Decrypted only inside TEE at runtime.
+
+```json
+{
+  "gemini_api_key": "your-gemini-api-key",
+  "cre_api_key": "your-sevn-api-bearer-token"
+}
+```
+
+#### 5. `frontend/.env` — Frontend environment (Vite)
+
+```env
+VITE_WORLD_APP_ID=app_staging_yourappid
+VITE_WORLD_ACTION=request-audit
+VITE_ATTESTATION_ADDRESS=0x...deployed AuditAttestation address
+VITE_AUDIT_GATE_ADDRESS=0x...deployed AuditGate address
+VITE_RPC_URL=https://sepolia.infura.io/v3/your-id
+VITE_SEVN_BACKEND_URL=https://your-backend/api/cre/btx-truth
+VITE_SEVN_STRIPE_URL=https://your-backend/api/cre/stripe-truth
 ```
 
 ### Deploy Contracts
@@ -187,18 +273,6 @@ cre workflow simulate ./my-workflow -T staging-settings -R .
 
 # Write attestation to Sepolia
 cre workflow simulate ./my-workflow -T staging-settings -R . --broadcast
-```
-
-### Run Log-Trigger Simulator (Event-Driven)
-
-In production, a CRE LogTrigger watches `AuditRequested` and auto-executes the workflow. Locally, use the simulator:
-
-```bash
-# Terminal 1: Start the event listener
-bun run trigger
-
-# Terminal 2: Start the frontend
-cd frontend && bun run dev
 ```
 
 ### Run Frontend
