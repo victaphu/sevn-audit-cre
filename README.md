@@ -30,6 +30,16 @@ We move the reconciliation engine onto Chainlink's decentralized oracle network.
 7. **Publishes an immutable attestation** on Ethereum with cryptographic hashes
 8. **Restricts access** via World ID — only verified humans can request audits
 
+## Real-World Impact
+
+This replaces trust-based, point-in-time financial auditing with **continuous, independently-verified assurance** — giving capital markets access to up-to-the-minute financial data instead of stale quarterly snapshots:
+
+- **For investors & capital markets**: Near real-time verified financial data for more accurate valuation, better price discovery, and more informed capital allocation decisions — instead of waiting months for outdated quarterly reports
+- **For regulators**: Daily tamper-proof attestations instead of annual audits, enabling earlier detection of discrepancies
+- **For auditors**: Cryptographic proof reduces re-performance work; continuous data trail replaces point-in-time sampling
+- **For businesses**: Automated compliance that runs while you sleep, and the ability to signal financial health to markets continuously
+- **For users**: Transparent proof that their payments match the platform's records
+
 ## Architecture
 
 ### Current State — Hackathon Build
@@ -47,6 +57,21 @@ In production, manual simulation is replaced by native CRE triggers. An **EVM Lo
 <p align="center">
   <img src="diagrams/audit-workflow-future.png" alt="Future state — fully autonomous CRE with Log Trigger and Automation" width="100%" />
 </p>
+
+## Demo
+
+<p align="center">
+  <img src="diagrams/user-interface.png" alt="Sevn Assurance frontend — World ID verification, audit trigger, and on-chain attestation display" width="100%" />
+</p>
+
+The frontend provides a single-page dashboard where verified users can trigger audits and view results in real time. The top section shows the **7-step CRE pipeline** (Fetch Sevn → Fetch Stripe → Read Chain → Read Polygon → AI Risk → Write → Verify). The **Request Audit** panel uses World ID to verify the user's humanity before enabling the audit trigger. Below, the **On-Chain Attestation** section displays the latest reconciliation result — including period date, revenue match rate, Sevn and Stripe revenue figures, net costs, token supply, and AI risk classification — all decoded from the on-chain event.
+
+The video demonstrates:
+1. World ID verification in the browser
+2. AuditGate contract receiving the proof on Sepolia
+3. CRE workflow executing — fetching Sevn + Stripe data, reading Polygon ERC-1155 tokens, AI classification
+4. Three-way attestation published on-chain with revenue match + token match rates
+5. Frontend displaying the verified attestation with all metrics
 
 ## Chainlink CRE Usage
 
@@ -280,25 +305,6 @@ cre workflow simulate ./my-workflow -T staging-settings -R . --broadcast
 ```bash
 cd frontend && bun run dev
 ```
-
-## Demo
-
-The video demonstrates:
-1. World ID verification in the browser
-2. AuditGate contract receiving the proof on Sepolia
-3. CRE workflow executing — fetching Sevn + Stripe data, reading Polygon ERC-1155 tokens, AI classification
-4. Three-way attestation published on-chain with revenue match + token match rates
-5. Frontend displaying the verified attestation with all metrics
-
-## Real-World Impact
-
-This replaces trust-based, point-in-time financial auditing with **continuous, independently-verified assurance** — giving capital markets access to up-to-the-minute financial data instead of stale quarterly snapshots:
-
-- **For investors & capital markets**: Near real-time verified financial data for more accurate valuation, better price discovery, and more informed capital allocation decisions — instead of waiting months for outdated quarterly reports
-- **For regulators**: Daily tamper-proof attestations instead of annual audits, enabling earlier detection of discrepancies
-- **For auditors**: Cryptographic proof reduces re-performance work; continuous data trail replaces point-in-time sampling
-- **For businesses**: Automated compliance that runs while you sleep, and the ability to signal financial health to markets continuously
-- **For users**: Transparent proof that their payments match the platform's records
 
 ## License
 
